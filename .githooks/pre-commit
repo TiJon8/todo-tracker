@@ -1,0 +1,12 @@
+#!/bin/sh
+# disable commits in main/master branch
+
+BRANCH=$(git branch --show-current)
+
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+    echo "❌ Ошибка: Прямые коммиты в ветку '$BRANCH' запрещены!"
+    echo "✔️ Создай feature-ветку: git checkout -b feature/название"
+    exit 1
+fi
+
+exit 0
