@@ -1,0 +1,35 @@
+services:
+  postgres:
+    container_name: todo-postgres
+    image: postgres:18
+    restart: always
+    ports:
+      - "5431:5432"
+    volumes:
+      - todo_pg_data:/var/lib/postgresql
+      - ./.dbinit/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    networks:
+      - todo_network
+
+  migrate:
+    container_name: todo-migrate
+    image: migrate/migrate:4
+    depends_on:
+      - postgres
+    volumes:
+      - ./migrate/migrations:/migrations
+    networks:
+      - todo_network
+
+
+volumes:
+  todo_pg_data:
+
+
+networks:
+  todo_network:
+

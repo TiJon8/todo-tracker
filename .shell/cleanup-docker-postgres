@@ -1,0 +1,7 @@
+#!/bin/bash
+
+read -p "Следующая операция удалит vlumes [y/N]: " ans;
+if [ "$ans" = "y" ]; then \
+	docker compose down postgres && \
+	docker volume remove todo_pg_data;
+fi;
