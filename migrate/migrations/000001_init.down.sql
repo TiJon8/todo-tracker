@@ -1,0 +1,4 @@
+DROP TABLE todo.tasks CASCADE;
+DROP TABLE todo.groups CASCADE;
+DROP TABLE todo.users CASCADE; 
+DROP SCHEMA todo;
