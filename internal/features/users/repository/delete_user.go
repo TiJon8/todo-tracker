@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	domain "github.com/TiJon8/todo-tracker/internal/core/domain"
+	pgerr "github.com/TiJon8/todo-tracker/internal/core/infra/postgres"
 	exceptions "github.com/TiJon8/todo-tracker/internal/core/transport/http/exceptions"
-	"github.com/jackc/pgx/v5"
 )
 
 
@@ -18,13 +18,13 @@ func (repo *RepositoryPostgres) DeleteUser(ctx context.Context, id string) (doma
 	query := `
 		DELETE FROM todo.users
 		WHERE id=$1
-		RETURNING id, row_version, name, phone
+		RETURNING id, row_version, name, phone;
 	`
 	row := repo.Pool.QueryRow(context, query, id)
 	// return []core_domain.User{}, nil
 	var userModel UserModel
 	if err := row.Scan(&userModel.ID, &userModel.Version, &userModel.Name, &userModel.Phone); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pgerr.ErrNoRows) {
 			return domain.User{}, fmt.Errorf("Targter with id=%s not found: %w", id, exceptions.NotFoundException)
 		}
 		return domain.User{}, fmt.Errorf("scan error: %w", err)

@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	domain "github.com/TiJon8/todo-tracker/internal/core/domain"
-	logger "github.com/TiJon8/todo-tracker/internal/core/logger" 
+	logger "github.com/TiJon8/todo-tracker/internal/core/logger"
 	exceptions "github.com/TiJon8/todo-tracker/internal/core/transport/http/exceptions"
 	request "github.com/TiJon8/todo-tracker/internal/core/transport/http/request"
 	response "github.com/TiJon8/todo-tracker/internal/core/transport/http/response"
@@ -78,8 +78,5 @@ func (h *UserHandler) PatchUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func patchFromRequest(request PatchUserRequest) domain.UserPatch {
-	return domain.UserPatch{
-		Name:  request.Name.ToDomain(),
-		Phone: request.Phone.ToDomain(),
-	}
+	return domain.NewPatchUser(request.Name.ToDomain(), request.Phone.ToDomain())
 }

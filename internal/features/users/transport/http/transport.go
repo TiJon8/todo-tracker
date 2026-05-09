@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	domain "github.com/TiJon8/todo-tracker/internal/core/domain"
-	core_transport_http_server "github.com/TiJon8/todo-tracker/internal/core/transport/http/server"
+	server "github.com/TiJon8/todo-tracker/internal/core/transport/http/server"
 )
 
 type UserDTO struct {
@@ -17,10 +17,10 @@ type UserDTO struct {
 
 func DTOFromDomain(user domain.User) UserDTO {
 	return UserDTO{
-		ID: user.ID,
+		ID:      user.ID,
 		Version: user.Version,
-		Name: user.Name,
-		Phone: user.Phone,
+		Name:    user.Name,
+		Phone:   user.Phone,
 	}
 }
 
@@ -32,7 +32,6 @@ func getUsersDTOList(users []domain.User) []UserDTO {
 	}
 	return res
 }
-
 
 type UserService interface {
 	CreateUser(ctx context.Context, user domain.User) (domain.User, error)
@@ -50,17 +49,21 @@ func NewUserHandlers(service UserService) *UserHandler {
 	return &UserHandler{UserService: service}
 }
 
-func (h *UserHandler) Routes() []core_transport_http_server.Route {
-	return []core_transport_http_server.Route{
+func (h *UserHandler) Routes() []server.Route {
+	return []server.Route{
 		{
 			Method:  http.MethodPost,
 			Path:    "/users",
 			Handler: h.CreateUser,
 		},
 		{
-			Method:  http.MethodGet,
-			Path:    "/users",
-			Handler: h.GetUsers,
+			Method:     http.MethodGet,
+			Path:       "/users",
+			Handler:    h.GetUsers,
+			/*
+			Возможность вешать свои middleware для определенных обработчиков
+			*/
+			// Middleware: []middleware.Middleware{middleware.Dumb("/get users/")},
 		},
 		{
 			Method:  http.MethodGet,

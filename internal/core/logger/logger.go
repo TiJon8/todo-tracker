@@ -18,12 +18,16 @@ type Logger struct {
 }
 
 type LoggerCongig struct {
-	Level string `envconfig:"LEVEL" required:"true"`
+	Level string `envconfig:"LEVEL" default:"debug"`
 	Path  string `envconfig:"PATH" required:"true"`
 }
 
+type loggerContextStruct struct{}
+
+var LoggerContextKey = loggerContextStruct{}
+
 func LoggerFromContext(ctx context.Context) *Logger {
-	logger, ok := ctx.Value("logger").(*Logger)
+	logger, ok := ctx.Value(LoggerContextKey).(*Logger)
 	if !ok {
 		panic("no logger in context")
 	}

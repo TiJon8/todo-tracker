@@ -15,7 +15,7 @@ import (
 
 type Config struct {
 	Addr              string        `envconfig:"ADDR" required:"true"`
-	ShutdownDucration time.Duration `envconfig:"SHUTDOWN_DURATION" required:"false"`
+	ShutdownDucration time.Duration `envconfig:"SHUTDOWN_DURATION" required:"false" default:"30s"`
 }
 
 func NewConfig() (Config, error) {
@@ -35,37 +35,37 @@ func NewConfigMust() Config {
 }
 
 type HTTPServer struct {
-	mux    *http.ServeMux
-	config Config
-	logger *logger.Logger
+	mux        *http.ServeMux
+	config     Config
+	logger     *logger.Logger
 	middleware []middleware.Middleware
 }
 
 func NewHTTPServer(config Config, logger *logger.Logger, middleware ...middleware.Middleware) *HTTPServer {
 	return &HTTPServer{
-		mux:    http.NewServeMux(),
-		config: config,
-		logger: logger,
+		mux:        http.NewServeMux(),
+		config:     config,
+		logger:     logger,
 		middleware: middleware,
 	}
 }
 
-func(h *HTTPServer) Register(routers ...*ApiVersionRouter) {
+func (s *HTTPServer) Register(routers ...*ApiVersionRouter) {
 	for _, router := range routers {
-		prefix := "/api/"+ string(router.apiVersion)
-		h.mux.Handle(prefix+"/", http.StripPrefix(prefix, router))
+		prefix := "/api/" + string(router.apiVersion)
+		s.mux.Handle(prefix+"/", http.StripPrefix(prefix, router.WithMiddleware()))
 	}
 }
 
-func (h *HTTPServer) Run(ctx context.Context) error {
-	mux := middleware.Chain(h.mux, h.middleware...)
+func (s *HTTPServer) Run(ctx context.Context) error {
+	mux := middleware.Chain(s.mux, s.middleware...)
 	server := &http.Server{
-		Addr:    h.config.Addr,
+		Addr:    s.config.Addr,
 		Handler: mux,
 	}
 	ch := make(chan error, 1)
 	go func() {
-		h.logger.Warn("Started Server on", zap.String("address", h.config.Addr))
+		s.logger.Warn("Started Server on", zap.String("address", s.config.Addr))
 
 		err := server.ListenAndServe()
 
@@ -80,14 +80,14 @@ func (h *HTTPServer) Run(ctx context.Context) error {
 			return fmt.Errorf("Ошибка при старте сервера: %w", err)
 		}
 	case <-ctx.Done():
-		h.logger.Warn("shutdown server")
-		context, cancel := context.WithTimeout(context.Background(), h.config.ShutdownDucration)
+		s.logger.Warn("shutdown server")
+		context, cancel := context.WithTimeout(context.Background(), s.config.ShutdownDucration)
 		defer cancel()
 		if err := server.Shutdown(context); err != nil {
 			_ = server.Close()
-			return fmt.Errorf("Не удалось остановить сервер за отведенное время %v, %w", h.config.ShutdownDucration, err)
+			return fmt.Errorf("Не удалось остановить сервер за отведенное время %v, %w", s.config.ShutdownDucration, err)
 		}
-		h.logger.Warn("Server has stopped")
+		s.logger.Warn("Server has stopped")
 	}
 	return nil
 }

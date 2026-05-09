@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	core_infra_postgres "github.com/TiJon8/todo-tracker/internal/core/infra/postgres"
+	core_infra_postgres_pgx "github.com/TiJon8/todo-tracker/internal/core/infra/postgres/pgx"
 	logger "github.com/TiJon8/todo-tracker/internal/core/logger"
 	middleware "github.com/TiJon8/todo-tracker/internal/core/transport/http/middleware"
 	server "github.com/TiJon8/todo-tracker/internal/core/transport/http/server"
@@ -30,7 +30,7 @@ func main() {
 
 	logger.Debug("Application is bootstarting... ")
 
-	pool, err := core_infra_postgres.NewPostgresConnPool(ctx, core_infra_postgres.NewConfigMust())
+	pool, err := core_infra_postgres_pgx.NewPostgresConnPool(ctx, core_infra_postgres_pgx.NewConfigMust())
 	if err != nil {
 		logger.Fatal("Не получилось создать postgres pool", zap.Error(err))
 	}
@@ -43,13 +43,20 @@ func main() {
 	ApiVersionRouter := server.NewApiVersionRouter(server.ApiVersion1)
 	ApiVersionRouter.Register(UsersTransport.Routes()...)
 
+
+	/*
+		Возможность вешать middleware для определенной версии
+	*/
+	// ApiVersionRouter2 := server.NewApiVersionRouter(server.ApiVersion2, middleware.Dumb("/api v2 router/"))
+	// ApiVersionRouter2.Register(UsersTransport.Routes()...)
+
 	Server := server.NewHTTPServer(
 		server.NewConfigMust(),
 		logger,
 		middleware.RequestID(),
 		middleware.ConnectLogger(logger),
-		middleware.CatchPanic(),
 		middleware.Trace(),
+		middleware.CatchPanic(),
 	)
 	Server.Register(ApiVersionRouter)
 

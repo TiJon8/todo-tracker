@@ -2,7 +2,6 @@ package core_transport_http_middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -26,16 +25,16 @@ func RequestID() Middleware {
 	}
 }
 
-func ConnectLogger(logger *logger.Logger) Middleware {
+func ConnectLogger(log *logger.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestId := r.Header.Get("X-Request-ID")
 
-			l := logger.With(
+			l := log.With(
 				zap.String("request-id", requestId),
 				zap.String("url", r.URL.String()),
 			)
-			ctx := context.WithValue(r.Context(), "logger", l)
+			ctx := context.WithValue(r.Context(), logger.LoggerContextKey, l)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -46,7 +45,6 @@ func CatchPanic() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			logger := logger.LoggerFromContext(ctx)
-			logger.Debug(fmt.Sprintf("%p", logger))
 			hrh := response.NewHTTPResponseHandler(logger, w)
 
 			defer func() {
@@ -68,9 +66,9 @@ func Trace() Middleware {
 			logger := logger.LoggerFromContext(ctx)
 			now := time.Now()
 
-			logger.Debug(">> Incoming HTTP request", zap.Time("time", now.UTC()))
+			logger.Debug(">> Incoming HTTP request", zap.String("method", r.Method), zap.Time("time", now.UTC()))
 			next.ServeHTTP(rw, r)
-			logger.Debug("<< Outcoming HTTP response", zap.Int("statusCode", rw.GetStatusCode()), zap.Duration("latency", time.Now().Sub(now)))
+			logger.Debug("<< Outcoming HTTP response", zap.Int("statusCode", rw.GetStatusCode()), zap.Duration("latency", time.Since(now)))
 		})
 	}
 }

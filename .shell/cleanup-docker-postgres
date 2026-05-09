@@ -2,6 +2,5 @@
 
 read -p "Следующая операция удалит vlumes [y/N]: " ans;
 if [ "$ans" = "y" ]; then \
-	docker compose down postgres && \
-	docker volume remove todo-tracker_todo_pg_data;
+	docker compose down -v postgres
 fi;

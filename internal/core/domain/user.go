@@ -60,6 +60,14 @@ type UserPatch struct {
 	Phone Nullable[string]
 }
 
+
+func NewPatchUser(name Nullable[string], phone Nullable[string]) UserPatch {
+	return UserPatch{
+		Name: name,
+		Phone: phone,
+	}
+}
+
 func (p *UserPatch) Validate() error {
 	if p.Name.Set && p.Name.Value == nil {
 		return fmt.Errorf("Не валидная структура Name: %w", exceptions.BadRequestException)

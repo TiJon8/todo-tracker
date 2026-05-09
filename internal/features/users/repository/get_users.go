@@ -15,7 +15,7 @@ func (repo *RepositoryPostgres) GetUsers(ctx context.Context, limit *int, offset
 		SELECT id, row_version, name, phone FROM todo.users
 		ORDER BY id ASC
 		LIMIT $1
-		OFFSET $2
+		OFFSET $2;
 	`
 	rows, err := repo.Pool.Query(context, query, limit, offset)
 	if err != nil {
