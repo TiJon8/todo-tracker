@@ -1,6 +1,8 @@
 include .env
 export
 
+export PROJECT_ROOT=$(shell pwd)
+
 setup-hooks:
 	git config core.hooksPath .githooks && \
 	echo "Хуки настроены!"
@@ -35,3 +37,12 @@ migrate-up:
 
 migrate-down:
 	@make migrate-action act=down
+
+
+run:
+	@export LOGGER_PATH=${PROJECT_ROOT}/out/logs && \
+	go mod tidy && \
+	go run ./cmd/app/main.go
+
+test:
+	@echo ${PROJECT_ROOT}
