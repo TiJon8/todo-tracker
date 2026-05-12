@@ -12,6 +12,13 @@ cleanup-dp:
 	@./.shell/cleanup-docker-postgres
 
 
+cleanup-logs:
+	@read -p "🧹 Следующая операция удалит все log файлы [y/N]: " ans; \
+		if [ "$$ans" = "y" ]; then \
+			rm -rf ${PROJECT_ROOT}/out/logs && \
+			echo "🫧 Логи удалены"; \
+		fi;
+
 migrate-create:
 	@if [ -z "$(seq)" ]; then \
 		echo "Отсутвует переменная seq"; \

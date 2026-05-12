@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	config "github.com/TiJon8/todo-tracker/internal/core/config"
 	core_infra_postgres_pgx "github.com/TiJon8/todo-tracker/internal/core/infra/postgres/pgx"
 	logger "github.com/TiJon8/todo-tracker/internal/core/logger"
 	middleware "github.com/TiJon8/todo-tracker/internal/core/transport/http/middleware"
@@ -24,7 +25,9 @@ import (
 )
 
 func main() {
-	time.Local = time.UTC
+	cfg := config.GetConfig()
+	time.Local = cfg.TimeZone
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -35,6 +38,7 @@ func main() {
 	}
 	defer logger.Close()
 
+	logger.Debug("Приложение запущенно в таймзоне", zap.Any("timezone", time.Local))
 	logger.Debug("Application is bootstarting... ")
 
 	pool, err := core_infra_postgres_pgx.NewPostgresConnPool(ctx, core_infra_postgres_pgx.NewConfigMust())
@@ -57,7 +61,6 @@ func main() {
 	ApiVersionRouter := server.NewApiVersionRouter(server.ApiVersion1)
 	ApiVersionRouter.Register(UsersTransport.Routes()...)
 	ApiVersionRouter.Register(TasksTransport.Routes()...)
-
 
 	/*
 		Возможность вешать middleware для определенной версии
