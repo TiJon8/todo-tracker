@@ -11,6 +11,7 @@ import (
 var (
 	uninitializedID      = ""
 	uninitializedVersion = -1
+	uninitializedTime = ""
 )
 
 type User struct {

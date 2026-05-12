@@ -2,6 +2,7 @@ package core_infra_postgres_pgx
 
 import (
 	"errors"
+	"fmt"
 
 	core_infra_postgres "github.com/TiJon8/todo-tracker/internal/core/infra/postgres"
 	"github.com/jackc/pgx/v5"
@@ -26,7 +27,13 @@ func (r pgxRow) Scan(dest ...any) error {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return core_infra_postgres.ErrNoRows
 		}
-		return err
+		var pgerr *pgconn.PgError
+		if errors.As(err, &pgerr) {
+			if pgerr.Code == "23503" {
+				return fmt.Errorf("%v; %w", err, core_infra_postgres.ErrViolatesForeignKey )
+			}
+		}
+		return fmt.Errorf("%v; %w", err, core_infra_postgres.ErrUnknown)
 	}
-	return nil 
+	return nil
 }
