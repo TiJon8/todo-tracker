@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	core_transport_http_exceptions "github.com/TiJon8/todo-tracker/internal/core/transport/http/exceptions"
 	"github.com/google/uuid"
@@ -42,4 +43,18 @@ func GetUUIDQueryParam(r *http.Request, key string) (*string, error) {
 		)
 	}
 	return &param, nil
+}
+
+func GetTimeQueryParam(r *http.Request, key string) (*time.Time, error) {
+	param := r.URL.Query().Get(key)
+	if param == "" {
+		return nil, nil
+	}
+
+	layout := "2006-01-02"
+	parsedTime, err := time.Parse(layout, param)
+	if err != nil {
+		return nil, fmt.Errorf("Ошибка парсинга даты: %w", err)
+	}
+	return &parsedTime, nil
 }

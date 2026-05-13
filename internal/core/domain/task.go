@@ -65,6 +65,18 @@ func NewTaskUninitialized(title string, description *string, authorId string, gr
 	)
 }
 
+func (t *Task) GetDuration() *time.Duration {
+	if !t.Completed {
+		return nil
+	}
+	if t.CompletedAt == nil {
+		return nil
+	}
+
+	duration := t.CompletedAt.Sub(t.CreatedAt)
+	return &duration 
+}
+
 func (t *Task) Validate() error {
 	if t.Title == "" {
 		return fmt.Errorf("Title не должен быть пустым: %w", exceptions.BadRequestException)

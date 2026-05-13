@@ -15,6 +15,9 @@ import (
 	server "github.com/TiJon8/todo-tracker/internal/core/transport/http/server"
 	history_repository "github.com/TiJon8/todo-tracker/internal/features/history/repository"
 	history_service "github.com/TiJon8/todo-tracker/internal/features/history/service"
+	statistic_repository_postgres "github.com/TiJon8/todo-tracker/internal/features/statistic/repository"
+	statistic_http_service "github.com/TiJon8/todo-tracker/internal/features/statistic/service"
+	statistic_trasnport_http "github.com/TiJon8/todo-tracker/internal/features/statistic/transport/http"
 	task_repository_postgres "github.com/TiJon8/todo-tracker/internal/features/tasks/repository"
 	task_http_service "github.com/TiJon8/todo-tracker/internal/features/tasks/service"
 	tasks_transport_http "github.com/TiJon8/todo-tracker/internal/features/tasks/transport/http"
@@ -58,9 +61,14 @@ func main() {
 	tasksService := task_http_service.NewTaskService(tasksRespository, historyService)
 	TasksTransport := tasks_transport_http.NewTaskHTTPHandlers(tasksService)
 
+	statisticRepository := statistic_repository_postgres.NewStatisticRepository(pool)
+	statisticService := statistic_http_service.NewStatisticService(statisticRepository)
+	StatisticTransport := statistic_trasnport_http.NewStatisticHTTPHandlers(statisticService)
+
 	ApiVersionRouter := server.NewApiVersionRouter(server.ApiVersion1)
 	ApiVersionRouter.Register(UsersTransport.Routes()...)
 	ApiVersionRouter.Register(TasksTransport.Routes()...)
+	ApiVersionRouter.Register(StatisticTransport.Routes()...)
 
 	/*
 		Возможность вешать middleware для определенной версии
