@@ -6,11 +6,18 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	config "github.com/TiJon8/todo-tracker/internal/core/config"
 	core_infra_postgres_pgx "github.com/TiJon8/todo-tracker/internal/core/infra/postgres/pgx"
 	logger "github.com/TiJon8/todo-tracker/internal/core/logger"
 	middleware "github.com/TiJon8/todo-tracker/internal/core/transport/http/middleware"
 	server "github.com/TiJon8/todo-tracker/internal/core/transport/http/server"
+	history_repository "github.com/TiJon8/todo-tracker/internal/features/history/repository"
+	history_service "github.com/TiJon8/todo-tracker/internal/features/history/service"
+	task_repository_postgres "github.com/TiJon8/todo-tracker/internal/features/tasks/repository"
+	task_http_service "github.com/TiJon8/todo-tracker/internal/features/tasks/service"
+	tasks_transport_http "github.com/TiJon8/todo-tracker/internal/features/tasks/transport/http"
 	users_repository_postgres "github.com/TiJon8/todo-tracker/internal/features/users/repository"
 	users_http_service "github.com/TiJon8/todo-tracker/internal/features/users/service"
 	users_trasport_http "github.com/TiJon8/todo-tracker/internal/features/users/transport/http"
@@ -18,6 +25,9 @@ import (
 )
 
 func main() {
+	cfg := config.GetConfig()
+	time.Local = cfg.TimeZone
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -28,6 +38,7 @@ func main() {
 	}
 	defer logger.Close()
 
+	logger.Debug("Приложение запущенно в таймзоне", zap.Any("timezone", time.Local))
 	logger.Debug("Application is bootstarting... ")
 
 	pool, err := core_infra_postgres_pgx.NewPostgresConnPool(ctx, core_infra_postgres_pgx.NewConfigMust())
@@ -40,9 +51,16 @@ func main() {
 	usersService := users_http_service.NewUserService(usersRepository)
 	UsersTransport := users_trasport_http.NewUserHandlers(usersService)
 
+	historyRepository := history_repository.NewHistoryRepository(pool)
+	historyService := history_service.NewHistoryService(historyRepository)
+
+	tasksRespository := task_repository_postgres.NewTaskRepository(pool)
+	tasksService := task_http_service.NewTaskService(tasksRespository, historyService)
+	TasksTransport := tasks_transport_http.NewTaskHTTPHandlers(tasksService)
+
 	ApiVersionRouter := server.NewApiVersionRouter(server.ApiVersion1)
 	ApiVersionRouter.Register(UsersTransport.Routes()...)
-
+	ApiVersionRouter.Register(TasksTransport.Routes()...)
 
 	/*
 		Возможность вешать middleware для определенной версии
