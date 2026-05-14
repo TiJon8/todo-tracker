@@ -25,6 +25,21 @@ services:
     networks:
       - todo_network
 
+  todo:
+    container_name: todo
+    build:
+      context: .
+      dockerfile: ./cmd/app/Dockerfile
+    volumes:
+      - ./out/logs:/app/out/logs
+    environment:
+      - LOGGER_PATH=/app/out/logs
+    env_file:
+      - path: ./.env.production
+    ports:
+      - "8082:8080"
+    networks:
+      - todo_network
 
 volumes:
   todo_pg_data:
