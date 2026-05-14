@@ -9,7 +9,6 @@ import (
 
 func (us *TaskService) GetTasks(ctx context.Context, userId string, limit *int, offset *int) ([]domain.Task, error) {
 	tasks, err := us.Repository.GetTasks(ctx, userId, limit, offset)
-	fmt.Println(tasks)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка при получения задач из бд: %w", err)
 	}

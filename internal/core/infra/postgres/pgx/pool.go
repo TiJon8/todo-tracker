@@ -53,7 +53,6 @@ func NewPostgresConnPool(ctx context.Context, config *Config) (*Pool, error) {
 		config.Port,
 		config.Db,
 	)
-	fmt.Println(connection)
 	pgxConfig, err := pgxpool.ParseConfig(connection)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка при парсинге конфига: %w", err)
